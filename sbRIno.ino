@@ -11,7 +11,7 @@ unsigned char rxBuf[8];
 #define CAN0_INT 2                              // Set INT to pin 2
 MCP_CAN CAN0(53);                               // Set CS to pin 10
 
-struct dati {
+}struct dati {
   uint16_t id, rpm, map, air, lambda, tps, engtemp, vbat, oilp, oilt, gear, fuel, speed, bse, tps2, tpd1, tpd2;
 } d;
 struct crusc {
@@ -20,6 +20,7 @@ struct crusc {
 
 void setup()
 {
+
   Serial.begin(115200); //vs raspi
   Serial2.begin(4800); //vs cruscotto
   //init ID costanti per i pacchetti in uscita
@@ -68,8 +69,16 @@ void loop()
       d.fuel=((uint16_t)rxBuf[4] << 8) | rxBuf[5] ; 
       d.speed=((uint16_t)rxBuf[6] << 8) | rxBuf[7] ; 
       d.speed*=1000;
-
-      //dopo che arriva il pacchetto di tipo 4 inoltro i dati:
+    } else if (rxId==5){
+      d.bse=((uint16_t)rxBuf[0] << 8) | rxBuf[1] ; 
+      d.bse*=10;
+      d.tps2=((uint16_t)rxBuf[2] << 8) | rxBuf[3] ; 
+      d.tps2*=10;
+      d.tpd1=((uint16_t)rxBuf[4] << 8) | rxBuf[5] ; 
+      d.tpd1*=10;
+      d.tpd2=((uint16_t)rxBuf[6] << 8) | rxBuf[7] ; 
+      d.tpd2*=10;
+      //dopo che arriva il pacchetto di tipo 5 inoltro i dati:
 
       //preparo il pacchetto per il cruscotto
       cr.rpm=d.rpm;
@@ -80,7 +89,7 @@ void loop()
       cr.vbat=d.vbat;
       
       Serial2.write((char*)&cr, 7); //vs cruscotto
-      Serial.write((char*)&d, 26); //13*2 vs raspi
+      Serial.write((char*)&d, 34); //17*2 vs raspi
     }
   }
 }
