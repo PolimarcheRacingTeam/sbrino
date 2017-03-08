@@ -12,7 +12,7 @@ unsigned char rxBuf[8];
 MCP_CAN CAN0(53);                               // Set CS to pin 10
 
 struct dati {
-  uint16_t id, rpm, map, air, lambda, tps, engtemp, vbat, oilp, oilt, gear, fuel, speed;
+  uint16_t id, rpm, map, air, lambda, tps, engtemp, vbat, oilp, oilt, gear, fuel, speed, bse, tps2, tpd1, tpd2;
 } d;
 struct crusc {
   uint8_t id, rpm, gear, speed, engtemp, oilp, vbat;
@@ -27,7 +27,7 @@ void setup()
   cr.id=204;
   // Initialize MCP2515 running at 16MHz with a baudrate of 500kb/s and the masks and filters disabled.
   if(CAN0.begin(MCP_ANY, CAN_1000KBPS, MCP_8MHZ) != CAN_OK)
-    Serial.println("diocane");
+    Serial.println("Polimarche Racing Team, si volaaaaaa");
   
   CAN0.setMode(MCP_NORMAL);// Set operation mode to normal so the MCP2515 sends acks to received data.
 
