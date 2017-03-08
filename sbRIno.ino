@@ -21,44 +21,44 @@ int getFromMotec() {
   {
     CAN0.readMsgBuf(&rxId, &len, rxBuf);
 
-    if (rxId == 0)
-      return 0;
-    if (len != 8) //ogni pacchetto CAN deve avere 8 byte di dati, cioè 4 uint16
-      return 0;
+    if (rxId != 0 && len == 8) { //ogni pacchetto CAN deve avere 8 byte di dati, cioè 4 uint16
 
-    //spacchetto i dati per il mio struct e li metto in scala se necessario
-    else if (rxId == 2) {
-      dm.rpm = ((uint16_t)rxBuf[0] << 8) | rxBuf[1] ;
-      dm.rpm /= 100;
-      dm.map = ((uint16_t)rxBuf[2] << 8) | rxBuf[3] ;
-      dm.air = ((uint16_t)rxBuf[4] << 8) | rxBuf[5] ;
-      dm.lambda = ((uint16_t)rxBuf[6] << 8) | rxBuf[7] ;
-    } else if (rxId == 3) {
-      dm.tps = ((uint16_t)rxBuf[0] << 8) | rxBuf[1] ;
-      dm.engtemp = ((uint16_t)rxBuf[2] << 8) | rxBuf[3] ;
-      dm.engtemp /= 10;
-      dm.vbat = ((uint16_t)rxBuf[4] << 8) | rxBuf[5] ;
-      dm.vbat /= 10;
-      dm.oilp = ((uint16_t)rxBuf[6] << 8) | rxBuf[7] ;
-      dm.oilp /= 100;
-    } else if (rxId == 4) {
-      dm.oilt = ((uint16_t)rxBuf[0] << 8) | rxBuf[1] ;
-      dm.gear = ((uint16_t)rxBuf[2] << 8) | rxBuf[3] ;
-      dm.fuel = ((uint16_t)rxBuf[4] << 8) | rxBuf[5] ;
-      dm.speed = ((uint16_t)rxBuf[6] << 8) | rxBuf[7] ;
-      dm.speed /= 10;
-    } else if (rxId==5){
-      d.bse=((uint16_t)rxBuf[0] << 8) | rxBuf[1] ;
-      d.bse*=10;
-      d.tps2=((uint16_t)rxBuf[2] << 8) | rxBuf[3] ;
-      d.tps2*=10;
-      d.tpd1=((uint16_t)rxBuf[4] << 8) | rxBuf[5] ;
-      d.tpd1*=10;
-      d.tpd2=((uint16_t)rxBuf[6] << 8) | rxBuf[7] ;
-      d.tpd2*=10;
-      return 1;
+      //spacchetto i dati per il mio struct e li metto in scala se necessario
+      if (rxId == 2) {
+        dm.rpm = ((uint16_t)rxBuf[0] << 8) | rxBuf[1] ;
+        dm.rpm /= 100;
+        dm.map = ((uint16_t)rxBuf[2] << 8) | rxBuf[3] ;
+        dm.air = ((uint16_t)rxBuf[4] << 8) | rxBuf[5] ;
+        dm.lambda = ((uint16_t)rxBuf[6] << 8) | rxBuf[7] ;
+      } else if (rxId == 3) {
+        dm.tps = ((uint16_t)rxBuf[0] << 8) | rxBuf[1] ;
+        dm.engtemp = ((uint16_t)rxBuf[2] << 8) | rxBuf[3] ;
+        dm.engtemp /= 10;
+        dm.vbat = ((uint16_t)rxBuf[4] << 8) | rxBuf[5] ;
+        dm.vbat /= 10;
+        dm.oilp = ((uint16_t)rxBuf[6] << 8) | rxBuf[7] ;
+        dm.oilp /= 100;
+      } else if (rxId == 4) {
+        dm.oilt = ((uint16_t)rxBuf[0] << 8) | rxBuf[1] ;
+        dm.gear = ((uint16_t)rxBuf[2] << 8) | rxBuf[3] ;
+        dm.fuel = ((uint16_t)rxBuf[4] << 8) | rxBuf[5] ;
+        dm.speed = ((uint16_t)rxBuf[6] << 8) | rxBuf[7] ;
+        dm.speed /= 10;
+      } else if (rxId == 5) {
+        dm.bse = ((uint16_t)rxBuf[0] << 8) | rxBuf[1] ;
+        dm.bse *= 10;
+        dm.tps2 = ((uint16_t)rxBuf[2] << 8) | rxBuf[3] ;
+        dm.tps2 *= 10;
+        dm.tpd1 = ((uint16_t)rxBuf[4] << 8) | rxBuf[5] ;
+        dm.tpd1 *= 10;
+        dm.tpd2 = ((uint16_t)rxBuf[6] << 8) | rxBuf[7] ;
+        dm.tpd2 *= 10;
+        return 1;
+      }
+    }
   }
   return 0;
+
 }
 
 struct datiCrusc {
