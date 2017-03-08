@@ -14,10 +14,10 @@ while True:
         data = arduino.read(24)
         val = struct.unpack('<12H',data)
 
-        for j in range(0, 12):
+        for j in range(0, 16):
             print '{0}\t'.format(val[j]),
         print '\r',
 
-        for j in range(0, 12):
+        for j in range(0, 16):
             f.write("%d;" % val[j])
         f.write('/n')
