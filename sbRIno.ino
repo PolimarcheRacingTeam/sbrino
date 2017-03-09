@@ -8,7 +8,7 @@
 MCP_CAN CAN0(53);                               // Set CS to pin 10
 
 struct datiMotec {
-  uint16_t rpm, map, air, lambda, tps, engtemp, vbat, oilp, oilt, gear, fuel, speed, bse, tps2, tpd1, tpd2;;
+  uint16_t rpm, map, air, lambda, tps, engtemp, vbat, oilp, oilt, gear, fuel, speed, bse, tps2, tpd1, tpd2;
 } dm;
 
 long unsigned int rxId;
