@@ -155,7 +155,7 @@ int lastDaq = 0;
 int time;
 void loop()
 {
-  //if (getFromMotec()) {
+  getFromMotec();
   time = millis();
   if (time - lastDaq >= Tdaq) {
     lastDaq = time;
