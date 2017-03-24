@@ -159,7 +159,6 @@ void loop()
   time = millis();
   if (time - lastDaq >= Tdaq) {
     lastDaq = time;
-    dm.bse=millis();//togli dopo debuggato
     daq();
     //invio a raspberry pi (occhio alle tensioni!!!! 3.3V vs 5V!!)
     Serial.write(255);
