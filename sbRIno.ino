@@ -103,6 +103,8 @@ void setupIMU(){
     Serial.println("LSM9DS1 not found");
     while(1) ;
   }
+  imu.setAccelScale(4); //+-4g
+
 }
 
 //sezione daq ==================================================================
