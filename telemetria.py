@@ -1,7 +1,7 @@
 import datetime
 import serial
 import struct
-arduino = serial.Serial('/dev/cu.usbmodem14121',115200)
+arduino = serial.Serial('/dev/ttyAMA0',115200)
 
 print 'rpm\tmap\tair\tlam\ttps\tengt\tbat\toilp\toilt\tgear\tfuel\tvel\tbse\tps2\tpd1\tpd2\n'
 while True:
