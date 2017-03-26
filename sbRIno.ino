@@ -56,13 +56,10 @@ int getFromMotec() {
         dm.speed /= 10;
       } else if (rxId == 5) {
         dm.bse = ((uint16_t)rxBuf[0] << 8) | rxBuf[1] ;
-        dm.bse *= 10;
+        dm.bse /= 100;
         dm.tps2 = ((uint16_t)rxBuf[2] << 8) | rxBuf[3] ;
-        dm.tps2 *= 10;
         dm.tpd1 = ((uint16_t)rxBuf[4] << 8) | rxBuf[5] ;
-        dm.tpd1 *= 10;
         dm.tpd2 = ((uint16_t)rxBuf[6] << 8) | rxBuf[7] ;
-        dm.tpd2 *= 10;
         return 1;
       }
     }
