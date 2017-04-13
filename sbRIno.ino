@@ -4,7 +4,7 @@
 #include <SPI.h>
 
 #define CAN0_INT 2                              // Set INT to pin 2
-MCP_CAN CAN0(53);                               // Set CS to pin 10
+MCP_CAN CAN0(53);                               // Set CS to pin 53
 
 struct datiMotec {
   uint16_t rpm, map, air, lambda, tps, engtemp, vbat, oilp, oilt, gear, fuel,
@@ -15,11 +15,11 @@ unsigned char len;
 unsigned char rxBuf[8];
 
 void initMotec(){
-  // Initialize MCP2515 running at 16MHz with a baudrate of 500kb/s and the masks and filters disabled.
-  if (CAN0.begin(MCP_ANY, CAN_1000KBPS, MCP_8MHZ) != CAN_OK){
+  // Initialize MCP2515 running at 8Mhz with a baudrate of 1000kb/s and the masks and filters disabled.
+  while (CAN0.begin(MCP_ANY, CAN_1000KBPS, MCP_8MHZ) != CAN_OK){
     //finchè non parte il modulo CAN non si fa niente
     Serial.println("MCP2515 not found");
-    while(1) ;
+    delay(1000);
   }
   CAN0.setMode(MCP_NORMAL);// Set operation mode to normal so the MCP2515 sends acks to received data.
 
@@ -83,8 +83,8 @@ void updateDashboard() {
   dc.vbat     = dm.vbat;
 
   //Cruscotto accetta pacchetti da 6 preceduti dal byte 204
-  Serial1.write(204);
-  Serial1.write((char*)&dc, sizeof(dc)); //vs cruscotto
+  Serial3.write(204);
+  Serial3.write((char*)&dc, sizeof(dc)); //vs cruscotto
 
 }
 
@@ -108,21 +108,24 @@ void setupIMU(){
 }
 
 //sezione daq ==================================================================
-struct datiDinamici { //4+2*8+2*6 = 32 byte
+struct datiDinamici { //4+2*9+2*6 = 34 byte
   uint32_t t;
-  uint16_t a8,a9,a10,a11,a12,a13,a14,a15;
+  uint16_t a5,a6,a7,a9,a10,a11,a12,a13,a14;
   int16_t ax,ay,az,gx,gy,gz;
 } dd;
 
 void daq(){
-  dd.a8   = analogRead(A8);
-  dd.a9   = analogRead(A9);
+  dd.a5   = analogRead(A5);
+  dd.a6   = analogRead(A6);
+  dd.a7   = analogRead(A7);
+
+  dd.a9   = analogRead(A9); //rear brake
   dd.a10  = analogRead(A10);
   dd.a11  = analogRead(A11);
   dd.a12  = analogRead(A12);
   dd.a13  = analogRead(A13);
-  dd.a14  = analogRead(A14);
-  dd.a15  = analogRead(A15);
+  dd.a14  = analogRead(A14); //steer
+
   dd.t    = millis();
   imu.readGyro();
   imu.readAccel();
@@ -138,8 +141,9 @@ void daq(){
 
 void setup()
 {
-  Serial.begin(115200); //vs raspi
-  Serial1.begin(4800); //vs cruscotto
+  Serial.begin(115200); //vs usb
+  Serial2.begin(115200); //vs raspi
+  Serial3.begin(4800); //vs cruscotto
   setupIMU();
   initMotec();
 
@@ -148,7 +152,7 @@ void setup()
 int Tcrusc = 100; //periodo in millisecondi tra i frame mandati al cruscotto
 int lastcrusc = 0;
 
-int Tdaq = 10;
+int Tdaq = 10; //periodo in millisecondi tra acquisizioni
 int lastDaq = 0;
 int time;
 void loop()
@@ -159,10 +163,10 @@ void loop()
     lastDaq = time;
     daq();
     //invio a raspberry pi (occhio alle tensioni!!!! 3.3V vs 5V!!)
-    Serial.write(255);
-    Serial.write(255);
-    Serial.write((char*)&dm, sizeof(dm));
-    Serial.write((char*)&dd, sizeof(dd));
+    Serial2.write(255);
+    Serial2.write(255);
+    Serial2.write((char*)&dm, sizeof(dm));
+    Serial2.write((char*)&dd, sizeof(dd));
   }
 
 
