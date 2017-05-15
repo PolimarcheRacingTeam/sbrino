@@ -116,15 +116,15 @@ struct datiDinamici { //4+2*9+2*6 = 34 byte
 
 void daq(){
   dd.a5   = analogRead(A5);
-  dd.a6   = analogRead(A6);
+  dd.a6   = analogRead(A6); //ntc
   dd.a7   = analogRead(A7);
 
-  dd.a9   = analogRead(A9); //rear brake
-  dd.a10  = analogRead(A10);
-  dd.a11  = analogRead(A11);
-  dd.a12  = analogRead(A12);
-  dd.a13  = analogRead(A13);
-  dd.a14  = analogRead(A14); //steer
+  dd.a9   = analogRead(A0); //rear brake
+  dd.a10  = analogRead(A1);
+  dd.a11  = analogRead(A2);
+  dd.a12  = analogRead(A3);
+  dd.a13  = analogRead(A4);
+  dd.a14  = analogRead(A5); //steer not connected
 
   dd.t    = millis();
   imu.readGyro();
