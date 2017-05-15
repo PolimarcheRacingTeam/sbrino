@@ -10,9 +10,7 @@ arduinoHeaderLow='\xff'
 arduinoHeaderHigh='\xff'
 
 leaseLife=500 #numero di campioni tra verifiche dei client
-
 port = 5000
-
 
 if bypassSerial==True:
     import time
@@ -109,12 +107,13 @@ while True:
                 s.sendto(packet, addr)
         #fine invio dati a client
 
+        #stampa dati sul terminale
         if printData==True:
-        # if i % 10 == 0:
-        #     for j in range(0, 16):
-        #         print '{0}\t'.format(val[j]),
-        #     print '\r',
-
-    #endfor
+            if i % 10 == 0:
+                for j in range(0, 16):
+                    print '{0}\t'.format(val[j]),
+                print '\r',
+        #fine stampa dati sul terminale
+    #fine file da 6000 campioni
     f.close()
-#endwhile
+#fine loop infinito
