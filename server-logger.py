@@ -90,8 +90,10 @@ s.bind(("", port))
 s.settimeout(0)
 
 if bypassCAN == False:
-  bus = can.interface.Bus(bustype='socketcan', channel='can0')
+  os.system("sudo ip link set can0 down")
   os.system("sudo ip link set can0 up type can bitrate 1000000")
+
+  bus = can.interface.Bus(bustype='socketcan', channel='can0')
   while False:
     if not bus.recv(0): #svuota il buffer prima di iniziare
       break
@@ -110,7 +112,6 @@ while True:
   while time.time()-lastfilestart < fileSpan: #1 minuto di campioni per file
 
     #acquisizione da Arduino
-    while True:
       msg = bus.recv(0)
       if msg :
         if msg.arbitration_id == 2:
@@ -118,84 +119,82 @@ while True:
         elif msg.arbitration_id == 3:
           d.tps, d.eng, d.bat, d.oilp = struct.unpack('>4H',msg.data)
         elif msg.arbitration_id == 4:
-          d.oilp, d.gear, d.fuel, d.vel = struct.unpack('>4H',msg.data)
+          d.oilt, d.gear, d.fuel, d.vel = struct.unpack('>4H',msg.data)
         elif msg.arbitration_id == 5:
           d.bse, d.tps2, d.tpd1, d.tpd2 = struct.unpack('>4H',msg.data)
         elif msg.arbitration_id == 10:
-          d.millis = struct.unpack('>L',msg.data)
+          d.millis = struct.unpack('<L',msg.data)[0]
         elif msg.arbitration_id == 11:
-          d.a5, d.ntc, d.a7, d.rearbrake = struct.unpack('>4H',msg.data)
+          d.a5, d.ntc, d.a7, d.rearbrake = struct.unpack('<4H',msg.data)
         elif msg.arbitration_id == 12:
-          d.fr, d.fl, d.rr, d.rl = struct.unpack('>4H',msg.data)
+          d.fr, d.fl, d.rr, d.rl = struct.unpack('<4H',msg.data)
         elif msg.arbitration_id == 13:
-          d.steer, d.ax, d.ay, d.az = struct.unpack('>4H',msg.data)
+          d.steer, d.ax, d.ay, d.az = struct.unpack('<4H',msg.data)
         elif msg.arbitration_id == 14:
-          d.gx, d.gy, d.gz = struct.unpack('>3H',msg.data)
-      else :
-        break
-    #fine acquisizione da Arduino
+          d.gx, d.gy, d.gz = struct.unpack('<3H',msg.data)
 
-    #salvataggio dati su SD
-    if time.time()-lastfilewrite > 0.01:
-      for el in d.iter():
-        f.write("%d;" % el)
-      f.write('\n')
-      lastfilewrite=time.time()
-    #fine salvataggio dati su SD
+        #fine acquisizione da Arduino
 
-    #verifica client, ogni 500 campioni (5 secondi circa)
-    #per mantenere viva la connessione i client devono mandare almeno
-    #un pacchetto ogni 5 secondi
-    if time.time()-lastCliCheck > leaseLife :
-      lastCliCheck =  time.time()
-      #forget client
-      cliaddr = None
-      #read all incoming data
-      dataIsAvailable = True
-      while dataIsAvailable:
-        try:
-          data, cliaddr = s.recvfrom(255)
-          print (cliaddr, ' sent ', data) #struct.unpack('B',data)[0]
+        #salvataggio dati su SD
+        if time.time()-lastfilewrite > 0.01:
+          for el in d.iter():
+            f.write("%d;" % el)
+          f.write('\n')
+        #fine salvataggio dati su SD
 
-        except socket.error as msg:
-          #all data has been read
-          #new client is last writer
-          if cliaddr == None:
-            print ('no client')
-          dataIsAvailable = False
-    #fine verifica client
+        #verifica client, ogni 500 campioni (5 secondi circa)
+        #per mantenere viva la connessione i client devono mandare almeno
+        #un pacchetto ogni 5 secondi
+        if time.time()-lastCliCheck > leaseLife :
+          lastCliCheck =  time.time()
+          #forget client
+          cliaddr = None
+          #read all incoming data
+          dataIsAvailable = True
+          while dataIsAvailable:
+            try:
+              data, cliaddr = s.recvfrom(255)
+              print (cliaddr, ' sent ', data) #struct.unpack('B',data)[0]
 
-    #invio dati a client
-    if cliaddr :
-      if time.time()-lastTx > txperiod:
-        lastTx=time.time()
-        packet = struct.pack('>20H3h',
-          val[0], #rpm
-          val[1], #map
-          val[3], #lam
-          val[4], #tps
-          val[5], #water temp
-          val[6], #vbat
-          val[7], #oil press
-          val[8], #oil temp
-          val[9], #gear
-          val[12], #bse
-          val[20], #rear brake
-          val[21], #fr
-          val[22], #fl
-          val[23], #rr
-          val[24], #rl
-          val[11], #speed
-          val[25], #steer
-          val[17],
-          val[18], #ntc
-          val[19],
-          val[28], #az
-          val[26], #ax
-          val[27]  #ay
-        )
-        s.sendto(packet, addr)
-    #fine invio dati a client
+            except socket.error as msg:
+              #all data has been read
+              #new client is last writer
+              if cliaddr == None:
+                print ('no client')
+              dataIsAvailable = False
+        #fine verifica client
+
+        #invio dati a client
+        if cliaddr :
+          if time.time()-lastTx > txperiod:
+            lastTx=time.time()
+            packet = struct.pack('>20H3h',
+              d.rpm, #rpm
+              d.map, #map
+              d.lam, #lam
+              d.tps, #tps
+              d.wat, #water temp
+              d.bat, #vbat
+              d.oilp, #oil press
+              d.oilt, #oil temp
+              d.gear, #gear
+              d.bse, #bse
+              d.rearbrake, #rear brake
+              d.fr, #fr
+              d.fl, #fl
+              d.rr, #rr
+              d.rl, #rl
+              d.vel, #speed
+              d.steer, #steer
+              d.a5,
+              d.ntc, #ntc
+              d.a7,
+              d.az, #az
+              d.ax, #ax
+              d.ay  #ay
+            )
+            s.sendto(packet, addr)
+        #fine invio dati a client
 
   #fine file
   f.close()
