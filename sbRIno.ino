@@ -3,7 +3,7 @@
 #include <mcp_can.h>
 #include <SPI.h>
 
-#define CAN0_INT 2                              // Set INT to pin 2
+#define CAN0_INT 48                              // Set INT to pin 2
 MCP_CAN CAN0(53);                               // Set CS to pin 53
 
 struct datiMotec {
@@ -26,6 +26,7 @@ void initCan(){
   //acks to received data.
 
   pinMode(CAN0_INT, INPUT);// Configuring pin for /INT input
+  Serial.println("Can setup ok");
 }
 //da 1 se è stato ricevuto il pacchetto di tipo 5, altrimenti 0
 int getFromMotec() {
@@ -57,6 +58,7 @@ int getFromMotec() {
         dm.fuel = ((uint16_t)rxBuf[4] << 8) | rxBuf[5] ;
         dm.speed = ((uint16_t)rxBuf[6] << 8) | rxBuf[7] ;
         dm.speed /= 10;
+        Serial.println(dm.gear);
       } else if (rxId == 5) {
         dm.bse = ((uint16_t)rxBuf[0] << 8) | rxBuf[1] ;
         dm.tps2 = ((uint16_t)rxBuf[2] << 8) | rxBuf[3] ;
@@ -92,7 +94,7 @@ void updateDashboard() {
 }
 
 //sezione imu ==================================================================
-
+/*
 #include <Wire.h>
 #include <SparkFunLSM9DS1.h>
 
@@ -106,10 +108,11 @@ void setupIMU(){
     Serial.println("LSM9DS1 not found");
     while(1) ;
   }
+  Serial.println("IMU setup successful");
   imu.setAccelScale(4); //+-4g
 
 }
-
+*/
 //sezione daq ==================================================================
 struct datiDinamici { //4+2*9+2*6 = 34 byte
   uint32_t t;
@@ -130,20 +133,20 @@ void daq(){
   dd.a14  = analogRead(A5); //steer not connected
 
   dd.t    = millis();
-  imu.readGyro();
+  /*imu.readGyro();
   imu.readAccel();
   dd.ax   = imu.ax;
   dd.ay   = imu.ay;
   dd.az   = imu.az;
   dd.gx   = imu.gx;
   dd.gy   = imu.gy;
-  dd.gz   = imu.gz;
+  dd.gz   = imu.gz;*/
 }
 
 //==============================================================================
 //INVIO DATI DINAMICI SUL CAN
 void txDynamic(){
-
+  Serial.println("ciao");
   //CAN0.sendMsgBuf(0x100, 0, 8, data);
 }
 
@@ -157,8 +160,9 @@ void setup()
 {
   Serial.begin(115200); //vs usb per debugging
   Serial3.begin(4800); //vs cruscotto
-  setupIMU();
   initCan();
+  //setupIMU();
+
 }
 
 int Tcrusc = 100; //periodo in millisecondi tra i frame mandati al cruscotto
