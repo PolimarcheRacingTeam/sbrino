@@ -118,9 +118,9 @@ struct datiDinamici { //4+2*9+2*6 = 34 byte
 } dd;
 
 void daq(){
-  dd.a5   = analogRead(A5);
+  dd.a5   = 0;//analogRead(A5);
   dd.a6   = analogRead(A6); //ntc
-  dd.a7   = analogRead(A7);
+  dd.a7   = 0;//analogRead(A7);
 
   dd.a9   = analogRead(A0); //rear brake
   dd.a10  = analogRead(A1);
@@ -144,7 +144,7 @@ void daq(){
 //INVIO DATI DINAMICI SUL CAN
 void txDynamic(){
 
-  CAN0.sendMsgBuf(0x100, 0, 8, data);
+  //CAN0.sendMsgBuf(0x100, 0, 8, data);
 }
 
 
