@@ -14,14 +14,16 @@ long unsigned int rxId;
 unsigned char len;
 unsigned char rxBuf[8];
 
-void initMotec(){
-  // Initialize MCP2515 running at 8Mhz with a baudrate of 1000kb/s and the masks and filters disabled.
+void initCan(){
+  // Initialize MCP2515 running at 8Mhz with a baudrate of 1000kb/s and the
+  //masks and filters disabled.
   while (CAN0.begin(MCP_ANY, CAN_1000KBPS, MCP_8MHZ) != CAN_OK){
     //finchè non parte il modulo CAN non si fa niente
     Serial.println("MCP2515 not found");
     delay(1000);
   }
-  CAN0.setMode(MCP_NORMAL);// Set operation mode to normal so the MCP2515 sends acks to received data.
+  CAN0.setMode(MCP_NORMAL);// Set operation mode to normal so the MCP2515 sends
+  //acks to received data.
 
   pinMode(CAN0_INT, INPUT);// Configuring pin for /INT input
 }
@@ -31,7 +33,8 @@ int getFromMotec() {
   {
     CAN0.readMsgBuf(&rxId, &len, rxBuf);
 
-    if (rxId != 0 && len == 8) { //ogni pacchetto CAN deve avere 8 byte di dati, cioè 4 uint16
+    if (rxId != 0 && len == 8) { //ogni pacchetto CAN deve avere 8 byte di dati,
+      // cioè 4 uint16
 
       //spacchetto i dati per il mio struct e li metto in scala se necessario
       if (rxId == 2) {
@@ -138,15 +141,24 @@ void daq(){
 }
 
 //==============================================================================
+//INVIO DATI DINAMICI SUL CAN
+void txDynamic(){
+
+  CAN0.sendMsgBuf(0x100, 0, 8, data);
+}
+
+
+//=============================================================================
+
+//MAIN
+
 
 void setup()
 {
-  Serial.begin(115200); //vs usb
-  Serial2.begin(115200); //vs raspi
+  Serial.begin(115200); //vs usb per debugging
   Serial3.begin(4800); //vs cruscotto
   setupIMU();
-  initMotec();
-
+  initCan();
 }
 
 int Tcrusc = 100; //periodo in millisecondi tra i frame mandati al cruscotto
@@ -162,15 +174,9 @@ void loop()
   if (time - lastDaq >= Tdaq) {
     lastDaq = time;
     daq();
-    //invio a raspberry pi (occhio alle tensioni!!!! 3.3V vs 5V!!)
-    Serial2.write(255);
-    Serial2.write(255);
-    Serial2.write((char*)&dm, sizeof(dm));
-    Serial2.write((char*)&dd, sizeof(dd));
+    txDynamic();
   }
 
-
-  //se il cruscotto da problemi provare con un ignorantissimo delay(100)
   if (time - lastcrusc >= Tcrusc) {
     lastcrusc = time;
     updateDashboard();
