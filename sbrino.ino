@@ -3,8 +3,9 @@
 #include <mcp_can.h>
 #include <SPI.h>
 
-#define CAN0_INT 48                              // Set INT to pin 2
-MCP_CAN CAN0(53);                               // Set CS to pin 53
+#define CAN0_INT 48
+
+MCP_CAN CAN0(53);
 
 struct datiMotec {
   uint16_t rpm, map, air, lambda, tps, engtemp, vbat, oilp, oilt, gear, fuel,
@@ -34,38 +35,26 @@ int getFromMotec() {
   {
     CAN0.readMsgBuf(&rxId, &len, rxBuf);
 
-    if (rxId != 0 && len == 8) { //ogni pacchetto CAN deve avere 8 byte di dati,
-      // cioè 4 uint16
-
-      //spacchetto i dati per il mio struct e li metto in scala se necessario
-      if (rxId == 2) {
-        dm.rpm = ((uint16_t)rxBuf[0] << 8) | rxBuf[1] ;
-        dm.rpm /= 100;
-        dm.map = ((uint16_t)rxBuf[2] << 8) | rxBuf[3] ;
-        dm.air = ((uint16_t)rxBuf[4] << 8) | rxBuf[5] ;
-        dm.lambda = ((uint16_t)rxBuf[6] << 8) | rxBuf[7] ;
-      } else if (rxId == 3) {
-        dm.tps = ((uint16_t)rxBuf[0] << 8) | rxBuf[1] ;
-        dm.engtemp = ((uint16_t)rxBuf[2] << 8) | rxBuf[3] ;
-        dm.engtemp /= 10;
-        dm.vbat = ((uint16_t)rxBuf[4] << 8) | rxBuf[5] ;
-        dm.vbat /= 10;
-        dm.oilp = ((uint16_t)rxBuf[6] << 8) | rxBuf[7] ;
-        dm.oilp /= 100;
-      } else if (rxId == 4) {
-        dm.oilt = ((uint16_t)rxBuf[0] << 8) | rxBuf[1] ;
-        dm.gear = ((uint16_t)rxBuf[2] << 8) | rxBuf[3] ;
-        dm.fuel = ((uint16_t)rxBuf[4] << 8) | rxBuf[5] ;
-        dm.speed = ((uint16_t)rxBuf[6] << 8) | rxBuf[7] ;
-        dm.speed /= 10;
-        Serial.println(dm.gear);
-      } else if (rxId == 5) {
-        dm.bse = ((uint16_t)rxBuf[0] << 8) | rxBuf[1] ;
-        dm.tps2 = ((uint16_t)rxBuf[2] << 8) | rxBuf[3] ;
-        dm.tpd1 = ((uint16_t)rxBuf[4] << 8) | rxBuf[5] ;
-        dm.tpd2 = ((uint16_t)rxBuf[6] << 8) | rxBuf[7] ;
-        return 1;
-      }
+    if (rxId == 2) {
+      dm.rpm = ((uint16_t)rxBuf[0] << 8) | rxBuf[1] ;
+      dm.rpm /= 100;
+      dm.map = ((uint16_t)rxBuf[2] << 8) | rxBuf[3] ;
+      dm.air = ((uint16_t)rxBuf[4] << 8) | rxBuf[5] ;
+      dm.lambda = ((uint16_t)rxBuf[6] << 8) | rxBuf[7] ;
+    } else if (rxId == 3) {
+      dm.tps = ((uint16_t)rxBuf[0] << 8) | rxBuf[1] ;
+      dm.engtemp = ((uint16_t)rxBuf[2] << 8) | rxBuf[3] ;
+      dm.engtemp /= 10;
+      dm.vbat = ((uint16_t)rxBuf[4] << 8) | rxBuf[5] ;
+      dm.vbat /= 10;
+      dm.oilp = ((uint16_t)rxBuf[6] << 8) | rxBuf[7] ;
+      dm.oilp /= 100;
+    } else if (rxId == 4) {
+      dm.oilt = ((uint16_t)rxBuf[0] << 8) | rxBuf[1] ;
+      dm.gear = ((uint16_t)rxBuf[2] << 8) | rxBuf[3] ;
+      dm.fuel = ((uint16_t)rxBuf[4] << 8) | rxBuf[5] ;
+      dm.speed = ((uint16_t)rxBuf[6] << 8) | rxBuf[7] ;
+      dm.speed /= 10;
     }
   }
   return 0;
@@ -93,26 +82,6 @@ void updateDashboard() {
 
 }
 
-//sezione imu ==================================================================
-/*
-#include <Wire.h>
-#include <SparkFunLSM9DS1.h>
-
-LSM9DS1 imu;
-
-void setupIMU(){
-  imu.settings.device.commInterface = IMU_MODE_I2C;
-  imu.settings.device.agAddress = 0x6B;
-  if (!imu.begin())
-  {
-    Serial.println("LSM9DS1 not found");
-    while(1) ;
-  }
-  Serial.println("IMU setup successful");
-  imu.setAccelScale(4); //+-4g
-
-}
-*/
 //sezione daq ==================================================================
 struct datiDinamici { //4+2*9+2*6 = 34 byte
   uint32_t t;
@@ -133,24 +102,19 @@ void daq(){
   dd.a14  = analogRead(A5); //steer not connected
 
   dd.t    = millis();
-  /*imu.readGyro();
-  imu.readAccel();
-  dd.ax   = imu.ax;
-  dd.ay   = imu.ay;
-  dd.az   = imu.az;
-  dd.gx   = imu.gx;
-  dd.gy   = imu.gy;
-  dd.gz   = imu.gz;*/
 }
 
 //==============================================================================
 //INVIO DATI DINAMICI SUL CAN
 void txDynamic(){
-  Serial.println("ciao");
-  //CAN0.sendMsgBuf(0x100, 0, 8, data);
+
+  CAN0.sendMsgBuf(10,0,4,(uint8_t*)&dd.t);
+  CAN0.sendMsgBuf(11,0,8,(uint8_t*)&dd.a5);
+  CAN0.sendMsgBuf(12,0,8,(uint8_t*)&dd.a10);
+  CAN0.sendMsgBuf(13,0,8,(uint8_t*)&dd.a14);
+  CAN0.sendMsgBuf(14,0,6,(uint8_t*)&dd.gx);
+
 }
-
-
 //=============================================================================
 
 //MAIN
@@ -161,8 +125,6 @@ void setup()
   Serial.begin(115200); //vs usb per debugging
   Serial3.begin(4800); //vs cruscotto
   initCan();
-  //setupIMU();
-
 }
 
 int Tcrusc = 100; //periodo in millisecondi tra i frame mandati al cruscotto
@@ -171,8 +133,7 @@ int lastcrusc = 0;
 int Tdaq = 10; //periodo in millisecondi tra acquisizioni
 int lastDaq = 0;
 int time;
-void loop()
-{
+void loop() {
   getFromMotec();
   time = millis();
   if (time - lastDaq >= Tdaq) {

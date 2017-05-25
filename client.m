@@ -1,4 +1,4 @@
-t = udp('192.168.0.31',5000);
+t = udp('192.168.0.31',2017);
 fopen(t);
 t.DatagramTerminateMode='off';
 i = 0;
