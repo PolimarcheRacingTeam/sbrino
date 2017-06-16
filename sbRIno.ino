@@ -89,7 +89,7 @@ void updateDashboard() {
 }
 
 //sezione imu ==================================================================
-
+/*
 #include <Wire.h>
 #include <SparkFunLSM9DS1.h>
 
@@ -106,7 +106,7 @@ void setupIMU(){
   imu.setAccelScale(4); //+-4g
 
 }
-
+*/
 //sezione daq ==================================================================
 struct datiDinamici { //4+2*9+2*6 = 34 byte
   uint32_t t;
@@ -127,6 +127,7 @@ void daq(){
   dd.a14  = analogRead(A5); //steer not connected
 
   dd.t    = millis();
+  /*
   imu.readGyro();
   imu.readAccel();
   dd.ax   = imu.ax;
@@ -135,6 +136,7 @@ void daq(){
   dd.gx   = imu.gx;
   dd.gy   = imu.gy;
   dd.gz   = imu.gz;
+  */
 }
 
 //==============================================================================
@@ -144,7 +146,7 @@ void setup()
   Serial.begin(115200); //vs usb
   Serial2.begin(115200); //vs raspi
   Serial3.begin(4800); //vs cruscotto
-  setupIMU();
+  //setupIMU();
   initMotec();
 
 }
