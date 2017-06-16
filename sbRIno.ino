@@ -163,8 +163,8 @@ void loop()
     lastDaq = time;
     daq();
     //invio a raspberry pi (occhio alle tensioni!!!! 3.3V vs 5V!!)
-    Serial2.write(255);
-    Serial2.write(255);
+    Serial2.write(123); //arduinoheaderlow
+    Serial2.write(234); //arduinoheaderHigh
     Serial2.write((char*)&dm, sizeof(dm));
     Serial2.write((char*)&dd, sizeof(dd));
   }

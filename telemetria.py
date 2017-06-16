@@ -6,10 +6,10 @@ import struct
 bypassSerial = False
 printData = False
 
-arduinoHeaderLow='\xff'
-arduinoHeaderHigh='\xff'
+arduinoHeaderLow = 123
+arduinoHeaderHigh = 234
 
-leaseLife=500 #numero di campioni tra verifiche dei client
+leaseLife = 500 #numero di campioni tra verifiche dei client
 port = 5000
 
 if bypassSerial==True:
