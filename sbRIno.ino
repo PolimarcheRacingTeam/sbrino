@@ -70,11 +70,11 @@ int getFromMotec() {
 //sezione cruscotto ============================================================
 
 struct datiCrusc {
-  uint8_t rpm, gear, speed, engtemp, oilp, vbat;
+  uint8_t rpm, gear, speed, engtemp, oilp, vbat, lambda, oilt;
 } dc;
 
 void updateDashboard() {
-  //preparo il pacchetto per il cruscotto
+  //preparo il pacchetto per il cruscotto dati troncati a 8 bit
   dc.rpm      = dm.rpm;
   dc.gear     = dm.gear;
   dc.speed    = dm.speed;
@@ -82,31 +82,47 @@ void updateDashboard() {
   dc.oilp     = dm.oilp;
   dc.vbat     = dm.vbat;
 
+  dc.lambda = dm.lambda >> 5;
+  // --- il valore della motec andrebbe diviso per circa 283 ---
+  // io qui shifto di 5 bit che equivale a dividere per 32 in modo da avere le
+  // cifre significative in un unico byte. infatti i valori del sensore vanno da
+  // 0 a poco più di 5000, dividendo per 32 ottengo valori entro il range di
+  // un solo byte (0-255), le operazioni in virgola mobile le lascio fare al
+  // cruscotto che deve ulteriormente dividere per 8.84375 per ottenere il
+  // valore finale da stampare sul display
+  dc.oilt = dm.oilt /10;
   //Cruscotto accetta pacchetti da 6 preceduti dal byte 204
   Serial3.write(204);
   Serial3.write((char*)&dc, sizeof(dc)); //vs cruscotto
-
+  //Serial3.write((char*)&dc, sizeof(dc)-1);//se non vuoi la lambda on the dash
+  
 }
 
 //sezione imu ==================================================================
-/*
-#include <Wire.h>
-#include <SparkFunLSM9DS1.h>
 
-LSM9DS1 imu;
+#include <Wire.h>
+#include "i2c.h"
+
+// IMU-Sensor
+#include "i2c_MPU9250.h"
+MPU9250 mpu9250;
 
 void setupIMU(){
-  imu.settings.device.commInterface = IMU_MODE_I2C;
-  imu.settings.device.agAddress = 0x6B;
-  if (!imu.begin())
-  {
-    Serial.println("LSM9DS1 not found");
-    while(1) ;
-  }
-  imu.setAccelScale(4); //+-4g
+  Serial.print("Probe MPU9250: ");
+    switch (mpu9250.initialize())
+    {
+        case 0: Serial.println("MPU-Sensor missing"); while(1) {};
+        case 1: Serial.println("Found unknown Sensor."); break;
+        case 2: Serial.println("MPU6500 found."); break;
+        case 3: Serial.println("MPU9250 found!"); break;
+    }
+
+    Serial.print("Probe AK8963: ");
+    if (i2c.probe(0x0C)) Serial.println("AK8963 found!");
+    else                 Serial.println("AK8963 missing");
 
 }
-*/
+
 //sezione daq ==================================================================
 struct datiDinamici { //4+2*9+2*6 = 34 byte
   uint32_t t;
@@ -127,16 +143,17 @@ void daq(){
   dd.a14  = analogRead(A5); //steer not connected
 
   dd.t    = millis();
-  /*
-  imu.readGyro();
-  imu.readAccel();
-  dd.ax   = imu.ax;
-  dd.ay   = imu.ay;
-  dd.az   = imu.az;
-  dd.gx   = imu.gx;
-  dd.gy   = imu.gy;
-  dd.gz   = imu.gz;
-  */
+  
+  static float fvec[9];
+  mpu9250.getMeasurement(fvec);
+  
+  dd.ax   = fvec[0]*1000;
+  dd.ay   = fvec[1]*1000;
+  dd.az   = fvec[2]*1000;
+  dd.gx   = fvec[4]*10;
+  dd.gy   = fvec[5]*10;
+  dd.gz   = fvec[6]*10;
+  
 }
 
 //==============================================================================
@@ -146,7 +163,7 @@ void setup()
   Serial.begin(115200); //vs usb
   Serial2.begin(115200); //vs raspi
   Serial3.begin(4800); //vs cruscotto
-  //setupIMU();
+  setupIMU();
   initMotec();
 
 }
@@ -165,8 +182,8 @@ void loop()
     lastDaq = time;
     daq();
     //invio a raspberry pi (occhio alle tensioni!!!! 3.3V vs 5V!!)
-    Serial2.write(123); //arduinoheaderlow
-    Serial2.write(234); //arduinoheaderHigh
+    Serial2.write(0x7b); //arduinoheaderlow
+    Serial2.write(0xea); //arduinoheaderHigh
     Serial2.write((char*)&dm, sizeof(dm));
     Serial2.write((char*)&dd, sizeof(dd));
   }

@@ -6,8 +6,8 @@ import struct
 bypassSerial = False
 printData = False
 
-arduinoHeaderLow = 123
-arduinoHeaderHigh = 234
+arduinoHeaderLow = '\x7b'
+arduinoHeaderHigh = '\xea'
 
 leaseLife = 500 #numero di campioni tra verifiche dei client
 port = 5000
@@ -39,11 +39,10 @@ while True:
 	        #lettura da arduino di 66 byte
 	        #31 da 2byte e 1 da 4
 	        #controllo header da 2 byte:
-            while True:
-                if arduino.read() != arduinoHeaderLow:
-                    continue
-                if arduino.read() == arduinoHeaderHigh:
-                    break
+            while arduino.read() != arduinoHeaderLow:
+                pass
+            if arduino.read() != arduinoHeaderHigh:
+                continue
 
             data = arduino.read(66)
             val = struct.unpack('<16HL9H6h',data) #formattazione valori
